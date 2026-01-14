@@ -4,6 +4,7 @@ import os
 from datetime import datetime, timezone
 from sheets.sheet_writer import write_range
 from data import derivatives
+from sheets.sheet_writer import get_service
 
 SPREADSHEET_ID = os.environ["SPREADSHEET_ID"]
 LAST_OI_FILE = "last_oi.json"
@@ -65,12 +66,37 @@ def bias(trend):
         return "Bearish"
     return "Neutral"
 
+# ----- AUTOMATIC HEADER WRITE -----
+headers = [
+    "Timestamp",
+    "Token",
+    "Price",
+    "7D High",
+    "7D Low",
+    "Range",
+    "4H %",
+    "1D %",
+    "1W %",
+    "Bias",
+    "Funding Rate",
+    "Open Interest",
+    "OI Δ",
+    "CVD"
+]
+
+service = get_service()
+service.spreadsheets().values().update(
+    spreadsheetId=SPREADSHEET_ID,
+    range=f"{SHEET_NAME}!B2",
+    valueInputOption="RAW",
+    body={"values":[headers]}
+).execute()
+
 # ----- BUILD DATA ROWS -----
 rows = []
 
 for token, meta in CONFIG.items():
     try:
-        # Timestamp
         ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
         # COINGECKO DATA
@@ -93,12 +119,10 @@ for token, meta in CONFIG.items():
         else:
             oi_delta = "N/A"
 
-        # Save current OI for next run
         last_oi[token] = oi
 
-        # Build row
         row = [
-            ts,         # Column A
+            ts,
             token,
             price,
             high,
@@ -117,7 +141,7 @@ for token, meta in CONFIG.items():
     except Exception as e:
         print(f"Error processing {token}: {e}")
 
-# ----- WRITE TO SHEET -----
+# ----- WRITE DATA TO B3 -----
 write_range(SPREADSHEET_ID, SHEET_NAME, rows)
 
 # Save last OI values
