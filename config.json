@@ -1,5 +1,6 @@
 {
   "BTC": {
-    "coingecko": "bitcoin"
+    "coingecko": "bitcoin",
+    "binance": "BTCUSDT"
   }
 }
