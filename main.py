@@ -3,6 +3,7 @@ import json
 import os
 from datetime import datetime, timezone
 from sheets.sheet_writer import write_range
+from data import derivatives
 
 SPREADSHEET_ID = os.environ["SPREADSHEET_ID"]
 
@@ -90,3 +91,29 @@ write_range(SPREADSHEET_ID, "Live_Price", live_price_rows)
 write_range(SPREADSHEET_ID, "Trend", trend_rows)
 
 print("Update successful", datetime.now(timezone.utc))
+
+derivatives_rows = []
+
+for token, meta in CONFIG.items():
+    binance_symbol = meta.get("binance")
+    if not binance_symbol:
+        continue
+
+    funding = derivatives.get_funding_rate(binance_symbol)
+    oi = derivatives.get_open_interest(binance_symbol)
+    cvd = derivatives.get_cvd_approx(binance_symbol)
+
+    # Calculate OI delta (requires previous OI, here simplified as N/A for first run)
+    oi_delta = "N/A"
+
+    derivatives_rows.append([
+        token,
+        funding,
+        oi,
+        oi_delta,
+        cvd
+    ])
+
+write_range(SPREADSHEET_ID, "Derivatives", derivatives_rows)
+
+
