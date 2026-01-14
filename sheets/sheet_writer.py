@@ -13,9 +13,10 @@ def get_service():
 def write_range(spreadsheet_id, sheet_name, values):
     service = get_service()
     body = {"values": values}
+    # DATA STARTS AT B3
     service.spreadsheets().values().update(
         spreadsheetId=spreadsheet_id,
-        range=f"{sheet_name}!A2",
+        range=f"{sheet_name}!B3",
         valueInputOption="RAW",
         body=body
     ).execute()
